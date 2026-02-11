@@ -1,0 +1,14 @@
+# Abaikan file konfigurasi database/API
+config.js
+js/config.js
+
+# Abaikan folder dependency (kalau pakai npm)
+node_modules/
+
+# Abaikan file sistem
+.DS_Store
+Thumbs.db
+
+# Abaikan folder build/dist (kalau ada)
+dist/
+build/

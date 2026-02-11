@@ -1,0 +1,161 @@
+/* =========================================
+   GLOBAL DESIGN SYSTEM (Scalable Tokens)
+========================================= */
+
+/* Font Import */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap");
+
+/* Root Variables */
+:root {
+  /* Typography */
+  --font-family: "Poppins", sans-serif;
+
+  /* Colors */
+  --color-bg: #f3f4f6;
+  --color-surface: rgba(255, 255, 255, 0.95);
+  --color-border: rgba(255, 255, 255, 0.3);
+
+  --color-primary: #ef4444;
+  --color-primary-hover: #dc2626;
+  --color-text: #111827;
+  --color-text-light: #6b7280;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  /* Shadow */
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+  /* Blur */
+  --blur-md: blur(10px);
+
+  /* Animation */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.4s ease;
+}
+
+/* =========================================
+   BASE STYLES
+========================================= */
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* =========================================
+   COMPONENTS (Reusable)
+========================================= */
+
+/* Glass Card Component */
+.glass-card {
+  background: var(--color-surface);
+  backdrop-filter: var(--blur-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+
+  transition: transform var(--transition-fast),
+              box-shadow var(--transition-fast);
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s var(--transition-normal) forwards;
+}
+
+/* =========================================
+   LOADER (Configurable)
+========================================= */
+
+.loader {
+  --loader-size: 30px;
+  --loader-border: 4px;
+
+  width: var(--loader-size);
+  height: var(--loader-size);
+
+  border: var(--loader-border) solid #e5e7eb;
+  border-top: var(--loader-border) solid var(--color-primary);
+  border-radius: 50%;
+
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================
+   TABS (Flexible Active State)
+========================================= */
+
+.tab {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast),
+              color var(--transition-fast);
+}
+
+.tab-active {
+  background-color: var(--color-primary) !important;
+  color: white !important;
+}
+
+.tab:hover {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+/* =========================================
+   UTILITIES
+========================================= */
+
+/* Hide scrollbar but keep scroll */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Flex Helpers */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Text Helpers */
+.text-muted {
+  color: var(--color-text-light);
+}

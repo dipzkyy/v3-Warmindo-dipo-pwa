@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasir - Warmindo Diponegoro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .tab-active { background-color: #ef4444 !important; color: white !important; }
+        .category-btn { -webkit-tap-highlight-color: transparent; cursor: pointer !important; transition: all 0.2s; }
+        .category-btn:active { transform: scale(0.9); }
+    </style>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <aside class="w-full md:w-20 bg-white shadow-xl z-50 flex md:flex-col justify-between items-center p-2">
+        <div class="flex md:flex-col gap-4">
+            <div class="p-3 bg-red-100 text-red-600 rounded-xl"><i class="ri-store-2-fill text-xl"></i></div>
+            <a href="history.html" class="p-3 text-gray-400 hover:text-red-600"><i class="ri-history-line text-xl"></i></a>
+        </div>
+        <button onclick="logout()" class="p-3 text-red-600 hover:bg-red-50 rounded-xl"><i class="ri-logout-box-line text-xl"></i></button>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-6 overflow-y-auto pb-[40vh]">
+        <header class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-xl font-bold text-gray-800">Menu Pesanan</h1>
+                <p class="text-xs text-gray-500" id="welcomeMsg">Kasir: -</p>
+            </div>
+            <input type="date" id="trxDate" class="text-xs font-bold p-2 bg-white rounded-lg shadow-sm border-none outline-none">
+        </header>
+
+        <div class="mb-5 relative">
+            <i class="ri-search-line absolute left-3 top-2.5 text-gray-400"></i>
+            <input type="text" id="searchInput" placeholder="Cari menu..." 
+                class="w-full pl-10 pr-4 py-2 rounded-xl border-none shadow-sm focus:ring-2 focus:ring-red-500 outline-none text-sm">
+        </div>
+
+        <div class="flex gap-2 overflow-x-auto pb-4 mb-4 no-scrollbar" id="categoryContainer">
+            <button class="category-btn whitespace-nowrap px-6 py-2 bg-white rounded-full text-xs font-bold shadow-sm tab-active" onclick="filterMenu('all', this)">Semua</button>
+            <button class="category-btn whitespace-nowrap px-6 py-2 bg-white rounded-full text-xs font-bold shadow-sm" onclick="filterMenu('indomie', this)">Indomie</button>
+            <button class="category-btn whitespace-nowrap px-6 py-2 bg-white rounded-full text-xs font-bold shadow-sm" onclick="filterMenu('topping', this)">Topping</button>
+            <button class="category-btn whitespace-nowrap px-6 py-2 bg-white rounded-full text-xs font-bold shadow-sm" onclick="filterMenu('snacks', this)">Snacks</button>
+            <button class="category-btn whitespace-nowrap px-6 py-2 bg-white rounded-full text-xs font-bold shadow-sm" onclick="filterMenu('kopi', this)">Kopi</button>
+            <button class="category-btn whitespace-nowrap px-6 py-2 bg-white rounded-full text-xs font-bold shadow-sm" onclick="filterMenu('nonkopi', this)">Non Kopi</button>
+        </div>
+
+        <div id="productGrid" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+    </main>
+
+    <div class="fixed bottom-40 right-6 md:right-auto md:left-24 z-40">
+        <button onclick="openExpenseModal()" class="bg-orange-500 text-white p-4 rounded-2xl shadow-2xl hover:bg-orange-600 transition flex items-center gap-2 font-bold text-xs">
+            <i class="ri-shopping-basket-line text-lg"></i>
+            <span>Catat Belanja</span>
+        </button>
+    </div>
+
+    <aside class="w-full md:w-80 bg-white shadow-2xl z-[60] flex flex-col h-[35vh] md:h-screen fixed bottom-0 md:relative rounded-t-[2.5rem] md:rounded-none">
+        <div class="px-6 py-4 flex-1 overflow-y-auto no-scrollbar">
+            <div class="flex justify-between items-center mb-4 pt-2">
+                <h2 class="text-sm font-bold text-gray-800">Keranjang</h2>
+                <button onclick="clearCart()" class="text-[10px] text-red-500 font-bold hover:underline">Reset</button>
+            </div>
+            <div id="cartItems" class="space-y-2"></div>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 border-t">
+            <div class="flex justify-between mb-4">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Bayar</span>
+                <span class="text-lg font-black text-red-600" id="cartTotal">Rp 0</span>
+            </div>
+            <button onclick="processCheckout()" id="btnCheckout" disabled class="w-full bg-red-600 text-white py-4 rounded-2xl font-bold shadow-lg disabled:bg-gray-300 active:scale-95 transition flex justify-center items-center gap-2">
+                <i class="ri-check-double-line"></i> Bayar & Simpan
+            </button>
+        </div>
+    </aside>
+
+    <div id="expenseModal" class="fixed inset-0 bg-black/60 z-[200] hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl scale-in">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-800">Catat Belanjaan</h3>
+                <button onclick="closeExpenseModal()" class="text-gray-400 hover:text-gray-600"><i class="ri-close-line text-2xl"></i></button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Nama Barang / Nota</label>
+                    <input type="text" id="expNote" placeholder="Misal: Beli Telur 1kg" class="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-orange-500 outline-none mt-1 text-sm">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Total Biaya (Rp)</label>
+                    <input type="number" id="expAmount" placeholder="0" class="w-full p-3 bg-gray-50 rounded-xl border-none focus:ring-2 focus:ring-orange-500 outline-none mt-1 text-sm font-bold">
+                </div>
+                <button onclick="submitExpense()" id="btnSubmitExpense" class="w-full bg-orange-500 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95 transition mt-2">
+                    Simpan Catatan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        let allProducts = [];
+        let cart = [];
+        const user = JSON.parse(localStorage.getItem('dipo_user'));
+
+        if (!user) window.location.href = 'index.html';
+        document.getElementById('trxDate').valueAsDate = new Date();
+        document.getElementById('welcomeMsg').innerText = `Kasir: ${user.username}`;
+
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+
+        async function fetchProducts() {
+            const { data } = await _db.from('products').select('*').order('name');
+            if (data) { allProducts = data; renderProducts(data); }
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = products.map(p => `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-transparent hover:border-red-500 cursor-pointer transition group" onclick="addToCart('${p.id}')">
+                    <h3 class="font-bold text-[11px] text-gray-700 truncate group-hover:text-red-600">${p.name}</h3>
+                    <p class="text-red-600 font-black text-[11px] mt-1">${formatRupiah(p.price)}</p>
+                </div>
+            `).join('');
+        }
+
+        function filterMenu(cat, btn) {
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('tab-active'));
+            btn.classList.add('tab-active');
+            const filtered = cat === 'all' ? allProducts : allProducts.filter(p => p.category === cat);
+            renderProducts(filtered);
+        }
+
+        function addToCart(id) {
+            const product = allProducts.find(p => p.id === id);
+            const item = cart.find(c => c.id === id);
+            if (item) item.qty++; else cart.push({ ...product, qty: 1 });
+            renderCart();
+        }
+
+        function updateQty(id, change) {
+            const item = cart.find(c => c.id === id);
+            if (item) {
+                item.qty += change;
+                if (item.qty <= 0) cart = cart.filter(c => c.id !== id);
+                renderCart();
+            }
+        }
+
+        function clearCart() { cart = []; renderCart(); }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            let total = 0;
+            container.innerHTML = cart.map(item => {
+                total += item.price * item.qty;
+                return `
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                    <span class="text-[10px] font-bold text-gray-700 truncate flex-1">${item.name}</span>
+                    <div class="flex items-center gap-3 ml-2">
+                        <button onclick="updateQty('${item.id}', -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded-lg shadow-sm text-red-500 font-bold border border-gray-100">-</button>
+                        <span class="text-xs font-black text-gray-800">${item.qty}</span>
+                        <button onclick="updateQty('${item.id}', 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded-lg shadow-sm text-green-600 font-bold border border-gray-100">+</button>
+                    </div>
+                </div>`;
+            }).join('');
+            document.getElementById('cartTotal').innerText = formatRupiah(total);
+            document.getElementById('btnCheckout').disabled = cart.length === 0;
+        }
+
+        // --- FUNGSI TRANSAKSI PENJUALAN ---
+        async function processCheckout() {
+            const btn = document.getElementById('btnCheckout');
+            btn.disabled = true;
+            btn.innerHTML = 'Menyimpan...';
+
+            try {
+                const totalGross = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+                const { data: trx, error: err } = await _db.from('transactions').insert([{
+                    tanggal: document.getElementById('trxDate').value,
+                    waktu: new Date().toLocaleTimeString('en-GB'),
+                    total_gross: totalGross,
+                    cashier_id: user.id,
+                    is_expense: false
+                }]).select().single();
+
+                if (err) throw err;
+
+                const items = cart.map(i => ({ 
+                    transaction_id: trx.id, 
+                    product_id: i.id, 
+                    qty: i.qty, 
+                    price_at_time: i.price 
+                }));
+                
+                const { error: errItem } = await _db.from('transaction_items').insert(items);
+                if (errItem) throw errItem;
+
+                Swal.fire({ icon: 'success', title: 'Berhasil!', timer: 1000, showConfirmButton: false });
+                cart = []; renderCart(); fetchProducts();
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Gagal', error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ri-check-double-line"></i> Bayar & Simpan';
+            }
+        }
+
+        // --- FUNGSI MODAL PENGELUARAN ---
+        function openExpenseModal() { document.getElementById('expenseModal').classList.remove('hidden'); }
+        function closeExpenseModal() { 
+            document.getElementById('expenseModal').classList.add('hidden'); 
+            document.getElementById('expNote').value = '';
+            document.getElementById('expAmount').value = '';
+        }
+
+        async function submitExpense() {
+            const note = document.getElementById('expNote').value;
+            const amount = document.getElementById('expAmount').value;
+            const btn = document.getElementById('btnSubmitExpense');
+
+            if (!note || !amount) return Swal.fire('Oops!', 'Lengkapi data belanja dulu.', 'warning');
+
+            btn.disabled = true;
+            btn.innerHTML = 'Menyimpan...';
+
+            try {
+                const { error } = await _db.from('transactions').insert([{
+                    tanggal: document.getElementById('trxDate').value,
+                    waktu: new Date().toLocaleTimeString('en-GB'),
+                    total_gross: parseInt(amount),
+                    cashier_id: user.id,
+                    is_expense: true, // Marker pengeluaran
+                    notes: note      // Detail belanjaan
+                }]);
+
+                if (error) throw error;
+
+                Swal.fire({ icon: 'success', title: 'Belanjaan Dicatat!', timer: 1200, showConfirmButton: false });
+                closeExpenseModal();
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Gagal', 'Gagal simpan catatan.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Simpan Catatan';
+            }
+        }
+
+        fetchProducts();
+
+        // Search listener
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const val = e.target.value.toLowerCase();
+            const filtered = allProducts.filter(p => p.name.toLowerCase().includes(val));
+            renderProducts(filtered);
+        });
+    </script>
+</body>
+</html>

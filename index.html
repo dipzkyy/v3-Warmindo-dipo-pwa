@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warmindo Diponegoro</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: { colors: { dipo: '#ef4444' } } }
+        }
+    </script>
+
+    <link rel="stylesheet" href="css/style.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <link rel="manifest" href="manifest.json">
+</head>
+<body class="bg-gradient-to-br from-red-600 to-orange-500 h-screen flex items-center justify-center">
+
+    <div class="glass-card p-8 w-full max-w-md animate-slide-up text-center">
+        <img src="assets/dipo.jpeg" alt="Logo" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg">
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Warmindo Diponegoro</h2>
+        <p class="text-gray-500 mb-6 text-sm">Masuk untuk memulai shift</p>
+
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <input type="text" id="username" placeholder="Username" required 
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+            </div>
+            <div>
+                <input type="password" id="password" placeholder="Password" required 
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+            </div>
+            <button type="submit" 
+                class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-lg transform active:scale-95 transition duration-200">
+                MASUK
+            </button>
+        </form>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            // Simple Auth Check via Table Users
+            const { data, error } = await _db
+                .from('users')
+                .select('*')
+                .eq('username', user)
+                .eq('password', pass) // Note: In production use hashing!
+                .single();
+
+            if (data) {
+                localStorage.setItem('dipo_user', JSON.stringify(data));
+                
+                const Toast = Swal.mixin({
+                    toast: true, position: 'top-end', showConfirmButton: false, timer: 1500
+                });
+                
+                await Toast.fire({ icon: 'success', title: `Selamat Datang, ${data.username}` });
+
+                if(data.role === 'owner') window.location.href = 'owner.html';
+                else window.location.href = 'kasir.html';
+            } else {
+                Swal.fire('Gagal', 'Username atau Password salah!', 'error');
+            }
+        });
+    </script>
+</body>
+</html>

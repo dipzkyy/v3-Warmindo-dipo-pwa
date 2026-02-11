@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belanja Bahan - Warmindo Diponegoro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col md:flex-row">
+
+    <aside class="w-full md:w-20 bg-white shadow-xl z-50 flex md:flex-col justify-between items-center p-2">
+        <div class="flex md:flex-col gap-4">
+            <a href="kasir.html" class="p-3 text-gray-400 hover:text-red-600 transition"><i class="ri-store-2-line text-xl"></i></a>
+            <div class="p-3 bg-orange-100 text-orange-600 rounded-xl"><i class="ri-shopping-basket-fill text-xl"></i></div>
+            <a href="history.html" class="p-3 text-gray-400 hover:text-red-600 transition"><i class="ri-history-line text-xl"></i></a>
+        </div>
+        <button onclick="logout()" class="p-3 text-red-600 hover:bg-red-50 rounded-xl"><i class="ri-logout-box-line text-xl"></i></button>
+    </aside>
+
+    <main class="flex-1 p-4 md:p-8">
+        <div class="max-w-2xl mx-auto">
+            <header class="mb-8">
+                <h1 class="text-2xl font-black text-gray-800">Catat Belanja Bahan</h1>
+                <p class="text-sm text-gray-500">Input semua pengeluaran operasional di sini</p>
+            </header>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm mb-8 border border-orange-100">
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Nama Barang / Deskripsi</label>
+                        <input type="text" id="expNote" placeholder="Contoh: Sosis 2 pack, Telur 1kg, Sawi" 
+                            class="w-full p-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none mt-1 text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-gray-400 uppercase ml-1">Total Biaya (Rp)</label>
+                        <input type="number" id="expAmount" placeholder="0" 
+                            class="w-full p-4 bg-gray-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 outline-none mt-1 text-lg font-black text-orange-600">
+                    </div>
+                    <button onclick="submitExpense()" id="btnSubmit" class="w-full bg-orange-500 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-orange-600 active:scale-95 transition flex justify-center items-center gap-2">
+                        <i class="ri-save-3-line"></i> Simpan Pengeluaran
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-50 bg-gray-50/50">
+                    <h3 class="font-bold text-gray-700 text-sm">Belanja Hari Ini</h3>
+                </div>
+                <div id="expenseList" class="divide-y divide-gray-50">
+                    </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('dipo_user'));
+        if (!user) window.location.href = 'index.html';
+
+        // UPDATE: Ambil riwayat belanja dari tabel 'expenses', bukan 'transactions'
+        async function fetchTodayExpenses() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Mengambil data dari tabel expenses
+            const { data, error } = await _db.from('expenses')
+                .select('*')
+                .eq('tanggal', today)
+                .order('created_at', { ascending: false }); // Urutkan dari yang terbaru
+
+            const container = document.getElementById('expenseList');
+            if (data && data.length > 0) {
+                container.innerHTML = data.map(item => `
+                    <div class="px-6 py-4 flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">${item.note}</p>
+                            <p class="text-[10px] text-gray-400">Dicatat pada: ${new Date(item.created_at).toLocaleTimeString('id-ID')}</p>
+                        </div>
+                        <span class="text-sm font-black text-red-500">-${formatRupiah(item.nominal)}</span>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p class="p-6 text-center text-xs text-gray-400">Belum ada catatan belanja hari ini.</p>';
+            }
+        }
+
+        // UPDATE: Fungsi Simpan Belanja (Sync dengan tabel 'expenses')
+        async function submitExpense() {
+            const note = document.getElementById('expNote').value;
+            const amount = document.getElementById('expAmount').value;
+            const btn = document.getElementById('btnSubmit');
+
+            if (!note || !amount) return Swal.fire('Oops!', 'Lengkapi data belanja dulu.', 'warning');
+
+            btn.disabled = true;
+            btn.innerHTML = 'Menyimpan...';
+
+            try {
+                // Insert langsung ke tabel 'expenses'
+                // Pastikan kolom DB: tanggal, nominal, note
+                const { error } = await _db.from('expenses').insert([{
+                    tanggal: new Date().toISOString().split('T')[0],
+                    nominal: parseInt(amount), // Kolom nominal (angka)
+                    note: note                // Kolom note (teks)
+                }]);
+
+                if (error) throw error;
+
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Tersimpan!', 
+                    text: 'Pengeluaran berhasil dicatat.',
+                    timer: 1000, 
+                    showConfirmButton: false 
+                });
+                
+                // Reset Form
+                document.getElementById('expNote').value = '';
+                document.getElementById('expAmount').value = '';
+                
+                // Refresh list
+                fetchTodayExpenses();
+
+            } catch (err) {
+                console.error("Error Simpan Belanja:", err);
+                Swal.fire('Gagal', 'Terjadi kesalahan database. Pastikan tabel expenses sudah dibuat.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ri-save-3-line"></i> Simpan Pengeluaran';
+            }
+        }
+
+        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
+        
+        // Panggil saat halaman dimuat
+        fetchTodayExpenses();
+    </script>
+</body>
+</html>

@@ -20,7 +20,8 @@
     <aside class="w-full md:w-20 bg-white shadow-xl z-50 flex md:flex-col justify-between items-center p-2">
         <div class="flex md:flex-col gap-4">
             <div class="p-3 bg-red-100 text-red-600 rounded-xl"><i class="ri-store-2-fill text-xl"></i></div>
-            <a href="history.html" class="p-3 text-gray-400 hover:text-red-600"><i class="ri-history-line text-xl"></i></a>
+            <a href="shop.html" class="p-3 text-gray-400 hover:text-orange-600 transition"><i class="ri-shopping-basket-line text-xl"></i></a>
+            <a href="history.html" class="p-3 text-gray-400 hover:text-red-600 transition"><i class="ri-history-line text-xl"></i></a>
         </div>
         <button onclick="logout()" class="p-3 text-red-600 hover:bg-red-50 rounded-xl"><i class="ri-logout-box-line text-xl"></i></button>
     </aside>
@@ -218,6 +219,7 @@
             document.getElementById('expAmount').value = '';
         }
 
+        // --- PATCH 1: LOGIKA BARU SIMPAN KE TABEL EXPENSES ---
         async function submitExpense() {
             const note = document.getElementById('expNote').value;
             const amount = document.getElementById('expAmount').value;
@@ -229,22 +231,21 @@
             btn.innerHTML = 'Menyimpan...';
 
             try {
-                const { error } = await _db.from('transactions').insert([{
+                // UPDATE: Simpan langsung ke tabel 'expenses' agar sesuai dengan struktur DB
+                // Menggunakan kolom 'nominal' dan 'note'
+                const { error } = await _db.from('expenses').insert([{
                     tanggal: document.getElementById('trxDate').value,
-                    waktu: new Date().toLocaleTimeString('en-GB'),
-                    total_gross: parseInt(amount),
-                    cashier_id: user.id,
-                    is_expense: true, // Marker pengeluaran
-                    notes: note      // Detail belanjaan
+                    nominal: parseInt(amount), // Sesuai kolom DB
+                    note: note                // Sesuai kolom DB
                 }]);
 
                 if (error) throw error;
 
-                Swal.fire({ icon: 'success', title: 'Belanjaan Dicatat!', timer: 1200, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'Belanjaan Dicatat!', text: 'Data masuk ke laporan pengeluaran.', timer: 1200, showConfirmButton: false });
                 closeExpenseModal();
             } catch (err) {
-                console.error(err);
-                Swal.fire('Gagal', 'Gagal simpan catatan.', 'error');
+                console.error("Error Detail:", err);
+                Swal.fire('Gagal', 'Pastikan tabel expenses memiliki kolom nominal & note.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = 'Simpan Catatan';
@@ -253,7 +254,6 @@
 
         fetchProducts();
 
-        // Search listener
         document.getElementById('searchInput').addEventListener('input', (e) => {
             const val = e.target.value.toLowerCase();
             const filtered = allProducts.filter(p => p.name.toLowerCase().includes(val));

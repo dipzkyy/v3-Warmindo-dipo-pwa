@@ -7,144 +7,125 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen text-gray-800">
 
     <nav class="bg-white shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center">
         <div class="flex items-center gap-3">
-            <img src="assets/dipo.jpeg" class="w-10 h-10 rounded-full border border-gray-200">
+            <img src="assets/dipo.jpeg" class="w-10 h-10 rounded-full border">
             <div>
-                <h1 class="font-bold text-gray-800 text-lg leading-tight">Owner Dashboard</h1>
+                <h1 class="font-bold text-lg leading-tight">Owner Dashboard</h1>
                 <p class="text-xs text-red-600 font-medium">Warmindo Diponegoro</p>
             </div>
         </div>
         <div class="flex gap-4 items-center">
-            <div class="text-right hidden md:block">
-                <p class="text-xs text-gray-400">Hari ini</p>
-                <p class="font-bold text-gray-800" id="currentDateDisplay">...</p>
-            </div>
-            <button onclick="logout()" class="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 text-red-500"><i class="ri-logout-box-r-line"></i></button>
+            <div id="currentDateDisplay" class="text-right hidden md:block text-xs font-bold text-gray-500"></div>
+            <button onclick="logout()" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition"><i class="ri-logout-box-r-line"></i></button>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-6 space-y-6">
-        
-        <div class="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm gap-4">
-            <div class="flex items-center gap-2">
-                <i class="ri-calendar-line text-gray-400"></i>
-                <input type="date" id="startDate" class="border rounded px-2 py-1 text-sm outline-none">
-                <span class="text-gray-400">-</span>
-                <input type="date" id="endDate" class="border rounded px-2 py-1 text-sm outline-none">
-                <button onclick="fetchData()" class="bg-red-600 text-white px-4 py-1.5 rounded text-sm hover:bg-red-700 transition">Filter Data</button>
+    <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+        <div class="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-2xl shadow-sm gap-4 border border-gray-100">
+            <div class="flex items-center gap-2 flex-wrap justify-center">
+                <input type="date" id="startDate" class="border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-500">
+                <span class="text-gray-400">s/d</span>
+                <input type="date" id="endDate" class="border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-500">
+                <button onclick="fetchData()" class="bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition">Proses Data</button>
             </div>
             <div class="flex gap-2">
-                <button onclick="exportExcel()" class="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition shadow-sm">
-                    <i class="ri-file-excel-line"></i> Excel
-                </button>
-                <button onclick="exportPDF()" class="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-900 transition shadow-sm">
-                    <i class="ri-file-pdf-line"></i> PDF
-                </button>
+                <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"><i class="ri-file-excel-2-line"></i> Excel</button>
+                <button onclick="exportPDF()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2"><i class="ri-file-pdf-line"></i> PDF</button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-500">
-                <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest">Total Pemasukan</p>
-                <h3 class="text-2xl font-black text-gray-800 mt-1" id="valGross">Rp 0</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-b-4 border-blue-500">
+                <p class="text-gray-400 text-[10px] font-bold uppercase">Pemasukan Kotor</p>
+                <h3 class="text-xl font-black text-gray-800 mt-1" id="valGross">Rp 0</h3>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-orange-500">
-                <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest">Belanja & Pot. Makan</p>
-                <h3 class="text-2xl font-black text-orange-600 mt-1" id="valExpense">Rp 0</h3>
-                <p class="text-[9px] text-gray-400 mt-2">*Potongan 10k aktif > 19 Jan 2026</p>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-b-4 border-orange-500">
+                <p class="text-gray-400 text-[10px] font-bold uppercase">Total Pengeluaran</p>
+                <h3 class="text-xl font-black text-orange-600 mt-1" id="valExpense">Rp 0</h3>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-green-500">
-                <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest">Laba Bersih</p>
-                <h3 class="text-2xl font-black text-green-600 mt-1" id="valNet">Rp 0</h3>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-b-4 border-green-500">
+                <p class="text-gray-400 text-[10px] font-bold uppercase">Laba Bersih</p>
+                <h3 class="text-xl font-black text-green-600 mt-1" id="valNet">Rp 0</h3>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-purple-500">
-                <p class="text-gray-400 text-[10px] font-black uppercase tracking-widest">Total Transaksi</p>
-                <h3 class="text-2xl font-black text-gray-800 mt-1" id="valCount">0</h3>
+            <div class="bg-white p-5 rounded-2xl shadow-sm border-b-4 border-purple-500">
+                <p class="text-gray-400 text-[10px] font-bold uppercase">Jml Transaksi</p>
+                <h3 class="text-xl font-black text-gray-800 mt-1" id="valCount">0</h3>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm">
-                <h3 class="font-bold text-gray-700 mb-4">Grafik Laba Harian</h3>
-                <canvas id="salesChart" height="150"></canvas>
+            <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[350px]">
+                <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="ri-line-chart-line text-red-500"></i> Grafik Laba Harian</h3>
+                <div class="relative h-64 w-full"><canvas id="salesChart"></canvas></div>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm">
-                <h3 class="font-bold text-gray-700 mb-4">Komposisi Pengeluaran</h3>
-                <canvas id="categoryChart" height="200"></canvas>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 min-h-[350px]">
+                <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="ri-pie-chart-line text-orange-500"></i> Perbandingan Kas</h3>
+                <div class="relative h-64 w-full"><canvas id="categoryChart"></canvas></div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            <div class="bg-white rounded-2xl shadow-sm overflow-hidden h-96 flex flex-col">
-                <div class="px-6 py-4 border-b bg-gray-50">
-                    <h3 class="font-bold text-gray-700 flex items-center gap-2">
-                        <i class="ri-shopping-bag-3-line text-blue-500"></i> Rincian Produk Terjual
-                    </h3>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 flex flex-col h-[450px]">
+                <div class="px-5 py-4 border-b bg-gray-50 font-bold text-sm flex justify-between">
+                    <span>🔥 Menu Terlaris</span>
                 </div>
-                <div class="overflow-auto flex-1 p-0">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-100 text-gray-600 sticky top-0 z-10">
-                            <tr>
-                                <th class="px-4 py-3">Nama Menu</th>
-                                <th class="px-4 py-3 text-center">Qty</th>
-                                <th class="px-4 py-3 text-right">Total (Rp)</th>
-                            </tr>
+                <div class="overflow-auto flex-1">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-gray-100 sticky top-0">
+                            <tr><th class="px-4 py-3">Menu</th><th class="px-4 py-3 text-center">Qty</th><th class="px-4 py-3 text-right">Total</th></tr>
                         </thead>
-                        <tbody id="productTableBody" class="divide-y">
-                            </tbody>
+                        <tbody id="productTableBody" class="divide-y"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm overflow-hidden h-96 flex flex-col">
-                <div class="px-6 py-4 border-b bg-gray-50">
-                    <h3 class="font-bold text-gray-700 flex items-center gap-2">
-                        <i class="ri-file-list-3-line text-purple-500"></i> Riwayat Transaksi Lengkap
-                    </h3>
-                </div>
-                <div class="overflow-auto flex-1 p-0">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-100 text-gray-600 sticky top-0 z-10">
-                            <tr>
-                                <th class="px-4 py-3">Waktu</th>
-                                <th class="px-4 py-3">Detail Item</th>
-                                <th class="px-4 py-3 text-right">Total</th>
-                            </tr>
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-orange-100 flex flex-col h-[450px]">
+                <div class="px-5 py-4 border-b bg-orange-50 font-bold text-orange-700 text-sm">🛒 Rincian Belanja</div>
+                <div class="overflow-auto flex-1">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-orange-100 text-orange-800 sticky top-0">
+                            <tr><th class="px-4 py-3">Tgl</th><th class="px-4 py-3">Item</th><th class="px-4 py-3 text-right">Biaya</th></tr>
                         </thead>
-                        <tbody id="transactionHistoryBody" class="divide-y">
-                            </tbody>
+                        <tbody id="expenseTableBody" class="divide-y"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 flex flex-col h-[450px]">
+                <div class="px-5 py-4 border-b bg-gray-50 font-bold text-sm">📑 Log Penjualan</div>
+                <div class="overflow-auto flex-1">
+                    <table class="w-full text-[10px] text-left">
+                        <thead class="bg-gray-100 sticky top-0">
+                            <tr><th class="px-4 py-3">Waktu</th><th class="px-4 py-3">Items</th><th class="px-4 py-3 text-right">Nominal</th></tr>
+                        </thead>
+                        <tbody id="transactionHistoryBody" class="divide-y"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-             <div class="px-6 py-4 border-b flex justify-between items-center">
-                <h3 class="font-bold text-gray-700">Laporan Keuangan Harian</h3>
-            </div>
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+            <div class="px-6 py-4 border-b bg-gray-50 font-bold">Laporan Harian Kolektif</div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left" id="exportTable">
-                    <thead class="bg-gray-50 text-gray-600">
+                    <thead class="bg-gray-100 text-gray-600">
                         <tr>
                             <th class="px-6 py-4">Tanggal</th>
-                            <th class="px-6 py-4 text-right">Penjualan (A)</th>
-                            <th class="px-6 py-4 text-right">Belanja/Potongan (B)</th>
-                            <th class="px-6 py-4 text-right">Laba Bersih (A-B)</th>
+                            <th class="px-6 py-4 text-right">Pemasukan (A)</th>
+                            <th class="px-6 py-4 text-right">Pengeluaran (B)</th>
+                            <th class="px-6 py-4 text-right">Laba Bersih</th>
                         </tr>
                     </thead>
-                    <tbody id="reportTableBody" class="divide-y">
-                        </tbody>
+                    <tbody id="reportTableBody" class="divide-y"></tbody>
                 </table>
             </div>
         </div>
@@ -153,256 +134,155 @@
     <script src="js/config.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('dipo_user'));
-        if (!user || user.role !== 'owner') {
-            window.location.href = 'index.html';
-        }
+        if (!user || user.role !== 'owner') window.location.href = 'index.html';
 
-        document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-        
-        const today = new Date();
-        const lastMonth = new Date();
-        lastMonth.setDate(today.getDate() - 30);
-        document.getElementById('startDate').valueAsDate = lastMonth;
-        document.getElementById('endDate').valueAsDate = today;
+        // Tampilan tanggal hari ini
+        document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-        let salesChartInstance = null;
-        let categoryChartInstance = null;
+        // Set default filter 30 hari
+        const now = new Date();
+        const start = new Date(); start.setDate(now.getDate() - 30);
+        document.getElementById('startDate').valueAsDate = start;
+        document.getElementById('endDate').valueAsDate = now;
+
+        let salesChart = null;
+        let categoryChart = null;
 
         async function fetchData() {
-            const start = document.getElementById('startDate').value;
-            const end = document.getElementById('endDate').value;
+            const dateStart = document.getElementById('startDate').value;
+            const dateEnd = document.getElementById('endDate').value;
 
-            // 1. Ambil Transactions (Header)
-            const { data: transactions, error: trxError } = await _db
-                .from('transactions')
-                .select('*')
-                .gte('tanggal', start)
-                .lte('tanggal', end)
-                .order('tanggal', { ascending: true });
+            try {
+                // Load data parallel
+                const [trRes, itRes, expRes] = await Promise.all([
+                    _db.from('transactions').select('*').gte('tanggal', dateStart).lte('tanggal', dateEnd),
+                    _db.from('transaction_items').select('*, products(name)'),
+                    _db.from('expenses').select('*').gte('tanggal', dateStart).lte('tanggal', dateEnd)
+                ]);
 
-            if (!transactions || transactions.length === 0) {
-                renderEmptyState();
-                return;
+                processUI(trRes.data || [], itRes.data || [], expRes.data || []);
+            } catch (err) {
+                console.error("Fetch Error:", err);
             }
-
-            // 2. Ambil Transaction Items (Detail)
-            const transactionIds = transactions.map(t => t.id);
-            const { data: items, error: itemError } = await _db
-                .from('transaction_items')
-                .select('*')
-                .in('transaction_id', transactionIds);
-
-            // 3. AMBIL PRODUK (Untuk mencocokkan ID produk ke Nama Produk)
-            // Ini penting biar nama produk muncul walau di tabel item cuma ada ID
-            const { data: products } = await _db.from('products').select('id, name');
-            
-            // Buat Map: ID -> Nama Produk
-            const productMap = {};
-            if(products) {
-                products.forEach(p => {
-                    productMap[p.id] = p.name;
-                });
-            }
-
-            processData(transactions, items || [], productMap);
         }
 
-        function renderEmptyState() {
-            document.getElementById('valGross').innerText = "Rp 0";
-            document.getElementById('valExpense').innerText = "Rp 0";
-            document.getElementById('valNet').innerText = "Rp 0";
-            document.getElementById('valCount').innerText = "0";
-            document.getElementById('reportTableBody').innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">Tidak ada data</td></tr>';
-            document.getElementById('productTableBody').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Tidak ada data</td></tr>';
-            document.getElementById('transactionHistoryBody').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Tidak ada data</td></tr>';
-            
-            // Clear charts if data is empty
-             if (salesChartInstance) { salesChartInstance.destroy(); salesChartInstance = null; }
-             if (categoryChartInstance) { categoryChartInstance.destroy(); categoryChartInstance = null; }
-        }
+        function processUI(trxs, items, exps) {
+            const daily = {};
+            const products = {};
+            const trxDetails = {};
+            const CUTOFF = new Date('2026-01-19');
 
-        function processData(transactions, items, productMap) {
-            const dailyData = {};
-            const productStats = {}; 
-            const transactionDetailsMap = {}; 
-            
-            const CUTOFF_DATE = new Date('2026-01-19');
-
-            // A. Proses Detail Items
-            items.forEach(item => {
-                // --- PERBAIKAN LOGIKA NAMA PRODUK ---
-                // Coba ambil dari item.product_name dulu, kalau kosong, cari di productMap pakai ID
-                let pName = item.product_name || item.name || productMap[item.product_id] || "Item Hapus/Unknown";
-                
-                // --- PERBAIKAN LOGIKA QUANTITY ---
-                // Coba ambil quantity, kalau undefined coba qty
-                let qty = item.quantity || item.qty || 0;
-                let subtotal = item.subtotal || item.total || 0;
-
-                // 1. Summary Produk
-                if (!productStats[pName]) {
-                    productStats[pName] = { qty: 0, total: 0 };
-                }
-                productStats[pName].qty += qty;
-                productStats[pName].total += subtotal;
-
-                // 2. Mapping ke Transaksi
-                if (!transactionDetailsMap[item.transaction_id]) {
-                    transactionDetailsMap[item.transaction_id] = [];
-                }
-                transactionDetailsMap[item.transaction_id].push(`${pName} (x${qty})`);
+            // 1. Map detail item per transaksi
+            items.forEach(it => {
+                const pName = it.products?.name || "Menu";
+                if (!trxDetails[it.transaction_id]) trxDetails[it.transaction_id] = [];
+                trxDetails[it.transaction_id].push(`${pName} (x${it.qty})`);
             });
 
-            // B. Proses Transaksi Harian
-            let totalGross = 0, totalExpense = 0, totalNet = 0, totalCount = 0;
-            const historyRows = []; 
-
-            transactions.forEach(trx => {
-                const date = trx.tanggal;
-                if (!dailyData[date]) dailyData[date] = { gross: 0, expense: 0, count: 0 };
-
-                if (trx.is_expense) {
-                    dailyData[date].expense += trx.total_gross;
-                } else {
-                    dailyData[date].gross += trx.total_gross;
-                    dailyData[date].count += 1;
-
-                    // Masukkan ke History List
-                    const details = transactionDetailsMap[trx.id] ? transactionDetailsMap[trx.id].join(', ') : '-';
-                    historyRows.push({
-                        date: trx.tanggal,
-                        time: trx.waktu,
-                        items: details,
-                        total: trx.total_gross
+            // 2. Loop Transaksi (Pemasukan)
+            trxs.forEach(t => {
+                if (!daily[t.tanggal]) daily[t.tanggal] = { in: 0, out: 0, count: 0 };
+                
+                if (!t.is_expense) {
+                    daily[t.tanggal].in += (t.total_gross || 0);
+                    daily[t.tanggal].count++;
+                    
+                    // Hitung akumulasi produk terjual
+                    const subItems = items.filter(i => i.transaction_id === t.id);
+                    subItems.forEach(si => {
+                        const name = si.products?.name || "Menu";
+                        if (!products[name]) products[name] = { qty: 0, total: 0 };
+                        products[name].qty += (si.qty || 0);
+                        products[name].total += ((si.price_at_time || 0) * (si.qty || 0));
                     });
                 }
             });
 
-            // C. Render Tabel & Stats Keuangan
-            const reportRows = [];
-            Object.keys(dailyData).sort().forEach(date => {
-                const currentDate = new Date(date);
-                const dayGross = dailyData[date].gross;
-                let dayExpense = dailyData[date].expense;
-                
-                if (currentDate > CUTOFF_DATE) dayExpense += 10000; 
-
-                const dayNet = dayGross - dayExpense;
-
-                totalGross += dayGross;
-                totalExpense += dayExpense;
-                totalNet += dayNet;
-                totalCount += dailyData[date].count;
-
-                reportRows.push({ date, gross: dayGross, expense: dayExpense, net: dayNet });
+            // 3. Loop Expenses (Pengeluaran)
+            exps.forEach(e => {
+                if (!daily[e.tanggal]) daily[e.tanggal] = { in: 0, out: 0, count: 0 };
+                daily[e.tanggal].out += (e.amount || e.nominal || 0);
             });
 
-            // Update UI Stats
-            document.getElementById('valGross').innerText = formatRupiah(totalGross);
-            document.getElementById('valExpense').innerText = formatRupiah(totalExpense);
-            document.getElementById('valNet').innerText = formatRupiah(totalNet);
+            // 4. Hitung Laporan Akhir & Potongan Makan
+            let totalIn = 0, totalOut = 0, totalCount = 0;
+            const report = Object.keys(daily).sort().reverse().map(date => {
+                const d = daily[date];
+                // Potongan makan otomatis jika ada penjualan di hari itu
+                if (new Date(date) > CUTOFF && d.in > 0) d.out += 10000;
+
+                totalIn += d.in;
+                totalOut += d.out;
+                totalCount += d.count;
+
+                return { date, in: d.in, out: d.out, net: d.in - d.out };
+            });
+
+            // Update DOM Stats
+            document.getElementById('valGross').innerText = formatRupiah(totalIn);
+            document.getElementById('valExpense').innerText = formatRupiah(totalOut);
+            document.getElementById('valNet').innerText = formatRupiah(totalIn - totalOut);
             document.getElementById('valCount').innerText = totalCount;
 
-            // Render Table Keuangan Harian
-            document.getElementById('reportTableBody').innerHTML = reportRows.map(row => `
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="px-6 py-4 font-bold text-gray-700">${row.date}</td>
-                    <td class="px-6 py-4 text-right text-blue-600 font-medium">${formatRupiah(row.gross)}</td>
-                    <td class="px-6 py-4 text-right text-red-500 font-medium">-${formatRupiah(row.expense)}</td>
-                    <td class="px-6 py-4 text-right font-black ${row.net >= 0 ? 'text-green-600' : 'text-red-700'}">${formatRupiah(row.net)}</td>
-                </tr>
-            `).join('');
+            // Render Tabel Menu Terjual
+            document.getElementById('productTableBody').innerHTML = Object.entries(products)
+                .sort((a,b) => b[1].qty - a[1].qty)
+                .map(([n, s]) => `<tr><td class="px-4 py-3 font-medium">${n}</td><td class="px-4 py-3 text-center"><span class="bg-gray-100 px-2 py-1 rounded-md font-bold">${s.qty}</span></td><td class="px-4 py-3 text-right text-gray-500">${formatRupiah(s.total)}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-4">Belum ada data</td></tr>';
 
-            // D. Render Tabel Produk Terjual (Sorted by Qty Tertinggi)
-            const sortedProducts = Object.entries(productStats).sort((a, b) => b[1].qty - a[1].qty);
-            
-            if (sortedProducts.length === 0) {
-                 document.getElementById('productTableBody').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada data produk terjual</td></tr>';
-            } else {
-                document.getElementById('productTableBody').innerHTML = sortedProducts.map(([name, stat]) => `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-3 font-medium text-gray-800">${name}</td>
-                        <td class="px-4 py-3 text-center bg-blue-50 text-blue-700 rounded-full text-xs font-bold">${stat.qty}</td>
-                        <td class="px-4 py-3 text-right text-gray-600">${formatRupiah(stat.total)}</td>
-                    </tr>
-                `).join('');
-            }
+            // Render Tabel Belanja
+            document.getElementById('expenseTableBody').innerHTML = exps.sort((a,b) => b.id - a.id).map(e => `<tr><td class="px-4 py-3 text-gray-400">${e.tanggal}</td><td class="px-4 py-3 font-medium">${e.item_name || 'Belanja'}</td><td class="px-4 py-3 text-right text-red-600 font-bold">-${formatRupiah(e.amount || e.nominal || 0)}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-400">Belum ada pengeluaran</td></tr>';
 
-            // E. Render Tabel History Transaksi Lengkap
-             if (historyRows.length === 0) {
-                 document.getElementById('transactionHistoryBody').innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Belum ada transaksi</td></tr>';
-            } else {
-                // Reverse agar yg terbaru diatas
-                document.getElementById('transactionHistoryBody').innerHTML = historyRows.reverse().map(row => `
-                    <tr class="hover:bg-gray-50 border-b last:border-0">
-                        <td class="px-4 py-3 text-xs text-gray-500">
-                            <div class="font-bold text-gray-700">${row.date}</div>
-                            ${row.time}
-                        </td>
-                        <td class="px-4 py-3 text-xs text-gray-600 leading-snug">${row.items}</td>
-                        <td class="px-4 py-3 text-right font-bold text-green-600 text-xs">${formatRupiah(row.total)}</td>
-                    </tr>
-                `).join('');
-            }
+            // Render Log Penjualan
+            document.getElementById('transactionHistoryBody').innerHTML = trxs.filter(t => !t.is_expense).sort((a,b) => b.id - a.id).slice(0,50).map(t => `<tr><td class="px-4 py-3 text-gray-400">${t.tanggal}<br>${t.waktu}</td><td class="px-4 py-3 leading-tight">${trxDetails[t.id]?.join(', ') || '-'}</td><td class="px-4 py-3 text-right font-bold text-green-600">${formatRupiah(t.total_gross)}</td></tr>`).join('');
 
-            renderCharts(reportRows, totalGross, totalExpense);
+            // Render Tabel Laporan Harian
+            document.getElementById('reportTableBody').innerHTML = report.map(r => `<tr><td class="px-6 py-4 font-bold text-gray-700">${r.date}</td><td class="px-6 py-4 text-right text-blue-600">${formatRupiah(r.in)}</td><td class="px-6 py-4 text-right text-red-500">-${formatRupiah(r.out)}</td><td class="px-6 py-4 text-right font-black ${r.net >= 0 ? 'text-green-600' : 'text-red-700'}">${formatRupiah(r.net)}</td></tr>`).join('');
+
+            updateCharts(report, totalIn, totalOut);
         }
 
-        function renderCharts(rows, totalGross, totalExpense) {
-            const ctxSales = document.getElementById('salesChart').getContext('2d');
-            if (salesChartInstance) salesChartInstance.destroy();
-            salesChartInstance = new Chart(ctxSales, {
+        function updateCharts(report, totalIn, totalOut) {
+            const chartData = [...report].reverse();
+            
+            // Grafik Line
+            if (salesChart) salesChart.destroy();
+            salesChart = new Chart(document.getElementById('salesChart'), {
                 type: 'line',
                 data: {
-                    labels: rows.map(r => r.date),
-                    datasets: [{
-                        label: 'Laba Bersih',
-                        data: rows.map(r => r.net),
-                        borderColor: '#dc2626',
-                        backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                        tension: 0.4,
-                        fill: true
-                    }]
+                    labels: chartData.map(r => r.date.split('-').slice(1).join('/')), // Short date mm/dd
+                    datasets: [{ label: 'Laba Bersih', data: chartData.map(r => r.net), borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4, pointRadius: 4 }]
                 },
-                options: { responsive: true }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
             });
 
-            const ctxCat = document.getElementById('categoryChart').getContext('2d');
-            if (categoryChartInstance) categoryChartInstance.destroy();
-            
-            // Handle case kalo data 0 biar chart ga error/jelek
-            const dataChart = (totalGross === 0 && totalExpense === 0) ? [1, 0] : [totalGross, totalExpense];
-            const colors = (totalGross === 0 && totalExpense === 0) ? ['#e5e7eb', '#e5e7eb'] : ['#3b82f6', '#f97316'];
-
-            categoryChartInstance = new Chart(ctxCat, {
+            // Grafik Doughnut
+            if (categoryChart) categoryChart.destroy();
+            categoryChart = new Chart(document.getElementById('categoryChart'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Pemasukan', 'Total Keluar'],
-                    datasets: [{
-                        data: dataChart,
-                        backgroundColor: colors
-                    }]
+                    labels: ['Masuk', 'Keluar'],
+                    datasets: [{ data: [totalIn, totalOut], backgroundColor: ['#3b82f6', '#f97316'], borderWidth: 0 }]
                 },
-                options: { responsive: true, cutout: '70%' }
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%' }
             });
         }
 
         function exportExcel() {
-            const table = document.getElementById('exportTable');
-            const wb = XLSX.utils.table_to_book(table, { sheet: "Laporan" });
-            XLSX.writeFile(wb, `Laporan_Owner_Dipo_${document.getElementById('startDate').value}.xlsx`);
+            const wb = XLSX.utils.table_to_book(document.getElementById('exportTable'));
+            XLSX.writeFile(wb, `Laporan_Dipo_Export.xlsx`);
         }
 
         function exportPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.text("Laporan Keuangan Warmindo Diponegoro", 14, 20);
-            doc.autoTable({ html: '#exportTable', startY: 30 });
-            doc.save(`Laporan_Dipo_${Date.now()}.pdf`);
+            doc.autoTable({ html: '#exportTable', startY: 30, theme: 'grid' });
+            doc.save("Laporan_Dipo.pdf");
         }
 
         function logout() { localStorage.clear(); window.location.href = 'index.html'; }
-        
+
+        // Initial load
         fetchData();
     </script>
 </body>

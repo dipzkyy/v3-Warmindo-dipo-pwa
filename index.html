@@ -2,83 +2,375 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warmindo Diponegoro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Warmindo Diponegoro · Login</title>
     
+    <!-- Tailwind + Remix Icon -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.3.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <!-- Custom config & plugins -->
     <script>
         tailwind.config = {
-            theme: { extend: { colors: { dipo: '#ef4444' } } }
-        }
+            theme: {
+                extend: {
+                    colors: { dipo: '#ef4444' },
+                    animation: {
+                        'gradient-xy': 'gradientXY 15s ease infinite',
+                        'fade-in-up': 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        gradientXY: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        };
     </script>
+    
+    <!-- Main stylesheet (memuat glass-card, loader dll) -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Ekstra gaya untuk halaman login yang lebih segar -->
+    <style>
+        /* Animated gradient background */
+        .bg-live-gradient {
+            background: linear-gradient(-45deg, #ef4444, #f97316, #f59e0b, #dc2626);
+            background-size: 400% 400%;
+            animation: gradientXY 18s ease infinite;
+        }
+        
+        /* Partikel halus (opsional) */
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            filter: blur(2px);
+            animation: float 20s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.4; }
+            100% { transform: translateY(-100vh) translateX(10vw); opacity: 0; }
+        }
+        
+        /* Floating label & icon input */
+        .input-group {
+            position: relative;
+            margin-top: 0.5rem;
+        }
+        .input-group i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            transition: color 0.2s;
+            pointer-events: none;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 2.75rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            transition: all 0.25s;
+            font-size: 0.95rem;
+        }
+        .input-group input:focus {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+            background: white;
+            outline: none;
+        }
+        .input-group input:focus + i {
+            color: #ef4444;
+        }
+        
+        /* Floating label */
+        .floating-label {
+            position: relative;
+        }
+        .floating-label label {
+            position: absolute;
+            left: 2.75rem;
+            top: 0.875rem;
+            color: #6b7280;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            pointer-events: none;
+            background: transparent;
+            padding: 0 0.25rem;
+        }
+        .floating-label input:focus ~ label,
+        .floating-label input:not(:placeholder-shown) ~ label {
+            top: -0.6rem;
+            left: 1.8rem;
+            font-size: 0.7rem;
+            color: #ef4444;
+            background: white;
+            padding: 0 0.5rem;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+        
+        /* Tombol dengan loading spinner */
+        .btn-dipo {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+            border-radius: 999px;
+            padding: 0.875rem 1.5rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            box-shadow: 0 10px 20px -8px rgba(220, 38, 38, 0.4);
+            border: none;
+            width: 100%;
+        }
+        .btn-dipo:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 20px 30px -10px rgba(220, 38, 38, 0.5);
+        }
+        .btn-dipo:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        .btn-dipo:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        
+        /* Staggered animation */
+        .stagger-1 { animation: fadeInUp 0.5s 0.1s both; }
+        .stagger-2 { animation: fadeInUp 0.5s 0.2s both; }
+        .stagger-3 { animation: fadeInUp 0.5s 0.3s both; }
+        .stagger-4 { animation: fadeInUp 0.5s 0.4s both; }
+    </style>
+    
+    <!-- PWA manifest & Supabase -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ef4444">
     <link rel="icon" type="image/jpeg" href="assets/dipo.jpeg">
     <link rel="apple-touch-icon" href="assets/dipo.jpeg">
-    <meta name="theme-color" content="#ef4444">
-        <link rel="stylesheet" href="css/style.css">
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
-    <link rel="manifest" href="manifest.json">
 </head>
-<body class="bg-gradient-to-br from-red-600 to-orange-500 h-screen flex items-center justify-center">
-
-    <div class="glass-card p-8 w-full max-w-md animate-slide-up text-center">
-        <img src="assets/dipo.jpeg" alt="Logo" class="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-white shadow-lg">
-        <h2 class="text-2xl font-bold text-gray-800 mb-2">Warmindo Diponegoro</h2>
-        <p class="text-gray-500 mb-6 text-sm">Masuk untuk memulai shift</p>
-
-        <form id="loginForm" class="space-y-4">
-            <div>
-                <input type="text" id="username" placeholder="Username" required 
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 transition">
-            </div>
-            <div>
-                <input type="password" id="password" placeholder="Password" required 
-                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500 transition">
-            </div>
-            <button type="submit" 
-                class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg shadow-lg transform active:scale-95 transition duration-200">
-                MASUK
-            </button>
-        </form>
+<body class="relative min-h-screen flex items-center justify-center p-4 bg-live-gradient overflow-hidden">
+    
+    <!-- Partikel dekoratif (hanya tampil di layar besar agar tidak berat) -->
+    <div class="hidden md:block">
+        <div class="particle" style="top: 10%; left: 5%;"></div>
+        <div class="particle" style="top: 30%; left: 80%; width: 10px; height: 10px;"></div>
+        <div class="particle" style="top: 70%; left: 15%; width: 8px; height: 8px;"></div>
+        <div class="particle" style="top: 85%; left: 70%;"></div>
+        <div class="particle" style="top: 20%; left: 45%; width: 12px; height: 12px;"></div>
+        <div class="particle" style="top: 60%; left: 90%;"></div>
     </div>
-
+    
+    <!-- Card utama dengan glassmorphism premium -->
+    <div class="glass-card w-full max-w-md p-8 md:p-10 rounded-3xl shadow-2xl backdrop-blur-xl bg-white/90 border border-white/30 animate-slide-up relative z-10">
+        
+        <!-- Logo dengan efek pulse halus -->
+        <div class="flex justify-center stagger-1">
+            <div class="relative">
+                <div class="absolute inset-0 bg-red-500 rounded-full blur-xl opacity-40 animate-pulse-slow"></div>
+                <img src="assets/dipo.jpeg" alt="Warmindo Dipo" 
+                    class="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white shadow-xl relative z-10">
+            </div>
+        </div>
+        
+        <!-- Headline -->
+        <div class="text-center mt-5 stagger-2">
+            <h2 class="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
+                Warmindo <span class="text-red-600">Diponegoro</span>
+            </h2>
+            <p class="text-gray-500 text-sm mt-1 flex items-center justify-center gap-1">
+                <i class="ri-cup-line"></i> 
+                Masuk untuk memulai shift
+            </p>
+        </div>
+        
+        <!-- FORM LOGIN (ditingkatkan) -->
+        <form id="loginForm" class="space-y-6 mt-8 stagger-3">
+            
+            <!-- Username field dengan floating label & icon -->
+            <div class="floating-label input-group">
+                <i class="ri-user-line"></i>
+                <input type="text" id="username" name="username" placeholder=" " 
+                    autocomplete="username" required
+                    class="peer">
+                <label for="username">Username</label>
+            </div>
+            
+            <!-- Password field dengan toggle visibility -->
+            <div class="floating-label input-group relative">
+                <i class="ri-lock-line"></i>
+                <input type="password" id="password" name="password" placeholder=" " 
+                    autocomplete="current-password" required
+                    class="peer">
+                <label for="password">Password</label>
+                <!-- Toggle icon -->
+                <button type="button" onclick="togglePasswordVisibility()" 
+                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-600 transition z-20">
+                    <i id="passwordToggleIcon" class="ri-eye-line"></i>
+                </button>
+            </div>
+            
+            <!-- Tombol submit dengan state loading -->
+            <button type="submit" id="loginButton" class="btn-dipo text-base md:text-lg">
+                <span id="buttonText">MASUK</span>
+                <span id="buttonSpinner" class="hidden">
+                    <i class="ri-loader-4-line animate-spin"></i>
+                </span>
+            </button>
+            
+            <!-- Pesan error tampil elegan (awalnya tersembunyi) -->
+            <div id="errorMessage" class="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-2xl hidden">
+                <i class="ri-alert-line mr-1"></i>
+                <span></span>
+            </div>
+        </form>
+        
+        <!-- Footer kecil (opsional) -->
+        <div class="text-center mt-6 text-xs text-gray-400 stagger-4">
+            <span>© 2026 Warmindo Diponegoro</span>
+            <span class="mx-2">•</span>
+            <span>v2.1 · modern POS</span>
+        </div>
+    </div>
+    
     <script src="js/config.js"></script>
     <script>
-        // Service Worker Registration
+        // --- Service Worker (PWA) ---
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
+            navigator.serviceWorker.register('sw.js').catch(console.warn);
         }
-
+        
+        // --- Toggle Password Visibility ---
+        window.togglePasswordVisibility = function() {
+            const pwInput = document.getElementById('password');
+            const icon = document.getElementById('passwordToggleIcon');
+            if (pwInput.type === 'password') {
+                pwInput.type = 'text';
+                icon.classList.remove('ri-eye-line');
+                icon.classList.add('ri-eye-off-line');
+            } else {
+                pwInput.type = 'password';
+                icon.classList.remove('ri-eye-off-line');
+                icon.classList.add('ri-eye-line');
+            }
+        };
+        
+        // --- Login handler dengan loading state & validasi halus ---
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-
-            // Simple Auth Check via Table Users
-            const { data, error } = await _db
-                .from('users')
-                .select('*')
-                .eq('username', user)
-                .eq('password', pass) // Note: In production use hashing!
-                .single();
-
-            if (data) {
-                localStorage.setItem('dipo_user', JSON.stringify(data));
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginButton');
+            const btnText = document.getElementById('buttonText');
+            const spinner = document.getElementById('buttonSpinner');
+            const errorDiv = document.getElementById('errorMessage');
+            const errorSpan = errorDiv.querySelector('span');
+            
+            // Reset error
+            errorDiv.classList.add('hidden');
+            
+            // Validasi sederhana
+            if (!username || !password) {
+                errorSpan.innerText = 'Username dan password harus diisi';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Tampilkan loading state
+            loginBtn.disabled = true;
+            btnText.classList.add('hidden');
+            spinner.classList.remove('hidden');
+            
+            try {
+                // Autentikasi via Supabase (masih pakai plain text - sesuaikan nanti)
+                const { data, error } = await _db
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', password)
+                    .maybeSingle();  // lebih aman dari .single()
                 
-                const Toast = Swal.mixin({
-                    toast: true, position: 'top-end', showConfirmButton: false, timer: 1500
-                });
+                if (error) throw error;
                 
-                await Toast.fire({ icon: 'success', title: `Selamat Datang, ${data.username}` });
-
-                if(data.role === 'owner') window.location.href = 'owner.html';
-                else window.location.href = 'kasir.html';
-            } else {
-                Swal.fire('Gagal', 'Username atau Password salah!', 'error');
+                if (data) {
+                    // Simpan user ke localStorage (masih, tapi sebaiknya pakai token)
+                    localStorage.setItem('dipo_user', JSON.stringify(data));
+                    
+                    // Toast selamat datang
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true,
+                        iconColor: '#ef4444'
+                    });
+                    
+                    await Toast.fire({ 
+                        icon: 'success', 
+                        title: `Hai, ${data.username}!` 
+                    });
+                    
+                    // Redirect sesuai role
+                    if (data.role === 'owner') {
+                        window.location.href = 'owner.html';
+                    } else {
+                        window.location.href = 'kasir.html';
+                    }
+                } else {
+                    // Kredensial salah
+                    errorSpan.innerText = 'Username atau password salah';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error('Login error:', err);
+                errorSpan.innerText = 'Terjadi kesalahan. Coba lagi.';
+                errorDiv.classList.remove('hidden');
+            } finally {
+                // Kembalikan tombol ke normal
+                loginBtn.disabled = false;
+                btnText.classList.remove('hidden');
+                spinner.classList.add('hidden');
             }
         });
+        
+        // Animasi tambahan: Hilangkan error saat user mulai mengetik
+        ['username', 'password'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                document.getElementById('errorMessage').classList.add('hidden');
+            });
+        });
     </script>
+    
+    <!-- Preload font dan aset (sedikit optimasi) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </body>
 </html>

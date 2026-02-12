@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stok Produk - Warmindo Diponegoro</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+  <style>
+    .badge { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px; }
+    .status-aman { background:#ECFDF5; color:#065F46; }
+    .status-menipis { background:#FFFBEB; color:#7C2D12; }
+    .status-habis { background:#FEF2F2; color:#991B1B; }
+    .table-scroll { max-height:60vh; overflow:auto; }
+    .muted { color:#6B7280; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+  <nav class="bg-white shadow-sm px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <img src="assets/dipo.jpeg" alt="logo" class="w-10 h-10 rounded-full border">
+      <div>
+        <h1 class="font-bold text-lg">Manajemen Stok — Warmindo Diponegoro</h1>
+        <div class="text-xs muted">Pantau & kelola stok produk</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <button id="backBtn" class="px-3 py-2 rounded bg-gray-100 hover:bg-gray-200 text-sm"><i class="ri-arrow-left-line"></i> Kembali</button>
+      <button id="refreshBtn" class="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm"><i class="ri-refresh-line"></i> Refresh</button>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto p-6 space-y-6">
+    <section class="bg-white p-4 rounded shadow-sm border">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="flex items-center gap-3 flex-1">
+          <input id="searchInput" type="search" placeholder="Cari produk..." class="w-full md:w-96 border rounded px-3 py-2" />
+          <select id="categoryFilter" class="border rounded px-3 py-2">
+            <option value="">Semua Kategori</option>
+          </select>
+          <select id="sortSelect" class="border rounded px-3 py-2">
+            <option value="name_asc">Nama A → Z</option>
+            <option value="stock_asc">Stok Terendah</option>
+            <option value="stock_desc">Stok Tertinggi</option>
+            <option value="price_asc">Harga Rendah</option>
+            <option value="price_desc">Harga Tinggi</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="exportVisibleBtn" class="bg-green-600 text-white px-4 py-2 rounded shadow text-sm"><i class="ri-file-excel-2-line"></i> Export Visible</button>
+          <div id="summaryStats" class="text-sm muted"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white p-4 rounded shadow-sm border">
+      <div class="table-scroll">
+        <table class="w-full text-sm text-left">
+          <thead class="bg-gray-100 sticky top-0">
+            <tr>
+              <th class="px-4 py-2">No</th>
+              <th class="px-4 py-2">Nama Produk</th>
+              <th class="px-4 py-2">Kategori</th>
+              <th class="px-4 py-2 text-right">Harga</th>
+              <th class="px-4 py-2 text-center">Stok</th>
+              <th class="px-4 py-2 text-center">Status</th>
+              <th class="px-4 py-2 text-right">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="productsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="text-xs muted">
+      <p>Warna status: <span class="badge status-aman">🟢 Aman (&gt; 10)</span> <span class="badge status-menipis">🟡 Menipis (1–10)</span> <span class="badge status-habis">🔴 Habis (0)</span></p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/stok.js"></script>
+</body>
+</html>

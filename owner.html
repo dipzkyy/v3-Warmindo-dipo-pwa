@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Owner Dashboard - Warmindo Diponegoro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css">
@@ -12,12 +12,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <style>
+      /* sedikit style tambahan untuk transaksi list */
+      .trx-row { display:flex; align-items:center; gap:12px; padding:12px; border-bottom:1px solid #f3f4f6; }
+      .trx-meta { display:flex; gap:12px; align-items:center; flex:1; font-size:13px; }
+      .trx-detail { padding:12px 20px; background:#fff; border-top:1px solid #f3f4f6; }
+      .expand-btn { width:36px; height:36px; display:grid; place-items:center; border-radius:8px; }
+      .small-btn { font-size:12px; padding:6px 8px; border-radius:6px; }
+      .ri-spin { animation: spin 1s linear infinite; }
+      @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800">
 
     <nav class="bg-white shadow-sm sticky top-0 z-30 px-6 py-4 flex justify-between items-center border-b">
         <div class="flex items-center gap-3">
-            <img src="assets/dipo.jpeg" class="w-10 h-10 rounded-full border">
+            <img src="assets/dipo.jpeg" class="w-10 h-10 rounded-full border" alt="logo">
             <div>
                 <h1 class="font-bold text-lg leading-tight">Owner Dashboard</h1>
                 <p class="text-xs text-red-600 font-medium">Warmindo Diponegoro</p>
@@ -25,7 +35,7 @@
         </div>
         <div class="flex gap-4 items-center">
             <div id="currentDateDisplay" class="text-right hidden md:block text-xs font-bold text-gray-500"></div>
-            <button onclick="logout()" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition"><i class="ri-logout-box-r-line"></i></button>
+            <button id="logoutBtn" class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition" title="Logout"><i class="ri-logout-box-r-line"></i></button>
         </div>
     </nav>
 
@@ -35,14 +45,16 @@
                 <input type="date" id="startDate" class="border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-500 font-bold">
                 <span class="text-gray-400">s/d</span>
                 <input type="date" id="endDate" class="border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-red-500 font-bold">
-                <button onclick="fetchData()" class="bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition">Update Data</button>
+                <button id="btnUpdate" class="bg-red-600 text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition">Update Data</button>
             </div>
             <div class="flex gap-2">
-                <button onclick="exportExcel()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-bold shadow-md hover:bg-green-700"><i class="ri-file-excel-2-line"></i> Excel Multi-Sheet</button>
-                <button onclick="exportPDF()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-bold shadow-md hover:bg-gray-900"><i class="ri-file-pdf-line"></i> PDF Summary</button>
+                <button id="exportExcelBtn" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-bold shadow-md hover:bg-green-700"><i class="ri-file-excel-2-line"></i> Excel</button>
+                <button id="exportPdfBtn" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-bold shadow-md hover:bg-gray-900"><i class="ri-file-pdf-line"></i> PDF</button>
+                <button id="btnStok" class="bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 font-bold shadow-md hover:bg-yellow-600" title="Cek Stok Produk">📦 Cek Stok</button>
             </div>
         </div>
 
+        <!-- dashboard cards, charts, product list, expense, transactions — sama seperti sebelumnya -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-blue-500">
                 <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Pemasukan Kotor</p>
@@ -99,14 +111,16 @@
             </div>
 
             <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 flex flex-col h-[400px]">
-                <div class="px-5 py-4 border-b bg-gray-50 font-bold text-sm">📑 Log Penjualan</div>
-                <div class="overflow-auto flex-1">
-                    <table class="w-full text-[10px] text-left">
-                        <thead class="bg-gray-100 sticky top-0 uppercase">
-                            <tr><th class="px-4 py-3">Waktu</th><th class="px-4 py-3 text-right">Nominal</th></tr>
-                        </thead>
-                        <tbody id="transactionHistoryBody" class="divide-y"></tbody>
-                    </table>
+                <div class="px-5 py-4 border-b bg-gray-50 font-bold text-sm">📑 Log Penjualan (Per Transaksi)</div>
+                <div class="px-5 py-3 flex gap-2 items-center border-b">
+                    <input id="searchTrans" placeholder="Cari transaksi (id / cashier / produk)..." class="border rounded-lg px-3 py-2 text-sm flex-1 outline-none">
+                    <select id="filterCashier" class="border rounded-lg px-3 py-2 text-sm">
+                        <option value="">Semua Kasir</option>
+                    </select>
+                </div>
+                <div id="transactionsList" class="overflow-auto flex-1 bg-white">
+                    <!-- transaction rows akan dirender di sini -->
+                    <div class="p-6 text-sm text-gray-500">Memuat transaksi...</div>
                 </div>
             </div>
         </div>
@@ -132,223 +146,10 @@
             </div>
         </div>
     </main>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- config.js must set global _db (supabase client) and define formatRupiah(...) -->
     <script src="js/config.js"></script>
-    <script>
-        const user = JSON.parse(localStorage.getItem('dipo_user'));
-        if (!user || user.role !== 'owner') window.location.href = 'index.html';
-
-        document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-
-        const now = new Date();
-        const start = new Date(); start.setDate(now.getDate() - 30);
-        document.getElementById('startDate').valueAsDate = start;
-        document.getElementById('endDate').valueAsDate = now;
-
-        let salesChart = null;
-        let categoryChart = null;
-
-        // FUNGSI UTAMA FETCH DATA
-        async function fetchData() {
-            const dateStart = document.getElementById('startDate').value;
-            const dateEnd = document.getElementById('endDate').value;
-
-            try {
-                // 1. Ambil transaksi dulu untuk mendapatkan list ID
-                const { data: trxs, error: trErr } = await _db.from('transactions')
-                    .select('*')
-                    .gte('tanggal', dateStart)
-                    .lte('tanggal', dateEnd)
-                    .eq('is_expense', false); // Pastikan hanya ambil pemasukan
-
-                if (trErr) throw trErr;
-
-                // 2. Ambil List ID Transaksi
-                const trxIds = trxs ? trxs.map(t => t.id) : [];
-
-                // 3. Ambil data detail & expenses secara paralel
-                // PERBAIKAN: Gunakan Promise.resolve jika ID kosong agar Promise.all tidak error
-                const itemQuery = trxIds.length > 0 
-                    ? _db.from('transaction_items').select('*, products(name)').in('transaction_id', trxIds)
-                    : Promise.resolve({ data: [] });
-
-                const [itRes, expRes] = await Promise.all([
-                    itemQuery, 
-                    _db.from('expenses').select('*').gte('tanggal', dateStart).lte('tanggal', dateEnd)
-                ]);
-
-                processUI(trxs || [], itRes.data || [], expRes.data || []);
-
-            } catch (err) {
-                console.error("Fetch Error:", err);
-                alert("Gagal memuat data. Cek koneksi internet.");
-            }
-        }
-
-        function processUI(trxs, items, exps) {
-            const startDate = new Date(document.getElementById('startDate').value);
-            const endDate = new Date(document.getElementById('endDate').value);
-            const reportMap = {};
-            const productStats = {};
-
-            // 1. Inisialisasi Map Tanggal
-            let curr = new Date(startDate);
-            while (curr <= endDate) {
-                const ds = curr.toISOString().split('T')[0];
-                reportMap[ds] = {
-                    date: ds,
-                    dayName: curr.toLocaleDateString('id-ID', { weekday: 'long' }),
-                    income: 0,
-                    expense: 0, // Default 0, jangan dipotong makan dulu!
-                    count: 0,
-                    notes: []
-                };
-                curr.setDate(curr.getDate() + 1);
-            }
-
-            // 2. Proses Pemasukan
-            trxs.forEach(t => {
-                if (reportMap[t.tanggal]) {
-                    reportMap[t.tanggal].income += Number(t.total_gross || 0);
-                    reportMap[t.tanggal].count++;
-                }
-            });
-
-            // 3. Proses Pengeluaran (Belanja)
-            exps.forEach(e => {
-                const ds = e.tanggal;
-                if (reportMap[ds]) {
-                    const nominal = Number(e.nominal || e.amount || 0);
-                    reportMap[ds].expense += nominal;
-                    if (e.note) reportMap[ds].notes.push(`${e.note} (${formatRupiah(nominal)})`);
-                    else if (e.item_name) reportMap[ds].notes.push(`${e.item_name} (${formatRupiah(nominal)})`);
-                }
-            });
-
-            // 4. Proses Logika Potong Makan (FIXED LOGIC)
-            Object.values(reportMap).forEach(r => {
-                const day = new Date(r.date).getDay(); // 0 = Minggu
-                // HANYA potong makan jika ada Pemasukan DAN bukan hari Minggu
-                if (r.income > 0 && day !== 0) {
-                    r.expense += 10000;
-                    r.notes.push("Potongan Makan (10k)");
-                }
-            });
-
-            // 5. Proses Produk Terlaris
-            items.forEach(it => {
-                const name = it.products?.name || "Menu Tak Dikenal";
-                if (!productStats[name]) productStats[name] = { qty: 0, total: 0 };
-                productStats[name].qty += Number(it.qty || 0);
-                productStats[name].total += Number(it.price_at_time || 0) * Number(it.qty || 0);
-            });
-
-            // 6. Render Tabel Utama
-            let totalIn = 0, totalOut = 0, totalTrx = 0;
-            const sortedDates = Object.keys(reportMap).sort().reverse();
-            
-            let htmlMain = "";
-            sortedDates.forEach(d => {
-                const r = reportMap[d];
-                // Hapus baris jika tidak ada aktivitas sama sekali agar tabel bersih (Opsional, tapi saya biarkan ada isinya untuk tracking tutup)
-                
-                const net = r.income - r.expense;
-                totalIn += r.income;
-                totalOut += r.expense;
-                totalTrx += r.count;
-
-                htmlMain += `
-                <tr class="hover:bg-gray-50 transition border-b">
-                    <td class="px-6 py-4">
-                        <div class="font-bold">${r.dayName}</div>
-                        <div class="text-[10px] text-gray-400 font-mono uppercase">${r.date}</div>
-                    </td>
-                    <td class="px-6 py-4 text-right font-bold text-blue-600">${formatRupiah(r.income)}</td>
-                    <td class="px-6 py-4 text-right font-bold text-orange-600">-${formatRupiah(r.expense)}</td>
-                    <td class="px-6 py-4 text-right font-black ${net >= 0 ? 'text-green-600' : 'text-red-600'}">${formatRupiah(net)}</td>
-                    <td class="px-6 py-4 text-[10px] text-gray-500 italic max-w-xs truncate">${r.notes.join('; ')}</td>
-                </tr>`;
-            });
-            document.getElementById('reportTableBody').innerHTML = htmlMain;
-
-            // 7. Render Stats Produk
-            document.getElementById('productTableBody').innerHTML = Object.entries(productStats)
-                .sort((a,b) => b[1].qty - a[1].qty)
-                .map(([name, s]) => `<tr><td class="px-4 py-3 font-medium">${name}</td><td class="px-4 py-3 text-center"><span class="bg-gray-100 px-2 py-1 rounded font-bold">${s.qty}</span></td><td class="px-4 py-3 text-right text-gray-400">${formatRupiah(s.total)}</td></tr>`).join('');
-
-            // 8. Render Belanja
-            document.getElementById('expenseTableBody').innerHTML = exps.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)).map(e => `<tr><td class="px-4 py-3 text-gray-400">${e.tanggal.split('-')[2]}/${e.tanggal.split('-')[1]}</td><td class="px-4 py-3">${e.note || e.item_name}</td><td class="px-4 py-3 text-right text-red-500 font-bold">-${formatRupiah(e.nominal || e.amount)}</td></tr>`).join('');
-
-            // 9. Render Log Penjualan
-            document.getElementById('transactionHistoryBody').innerHTML = trxs.slice(0, 30).map(t => `<tr><td class="px-4 py-3 text-gray-400">${t.waktu}</td><td class="px-4 py-3 text-right font-bold text-green-600">${formatRupiah(t.total_gross)}</td></tr>`).join('');
-
-            // Update Dashboard Cards
-            document.getElementById('valGross').innerText = formatRupiah(totalIn);
-            document.getElementById('valExpense').innerText = formatRupiah(totalOut);
-            document.getElementById('valNet').innerText = formatRupiah(totalIn - totalOut);
-            document.getElementById('valCount').innerText = totalTrx;
-
-            updateCharts(reportMap, totalIn, totalOut);
-        }
-
-        function updateCharts(map, tin, tout) {
-            const dataArr = Object.values(map).sort((a,b) => new Date(a.date) - new Date(b.date));
-            
-            if (salesChart) salesChart.destroy();
-            salesChart = new Chart(document.getElementById('salesChart'), {
-                type: 'line',
-                data: {
-                    labels: dataArr.map(i => i.date.split('-')[2] + '/' + i.date.split('-')[1]), // Tampilkan Tgl/Bln
-                    datasets: [{ label: 'Laba Bersih', data: dataArr.map(i => i.income - i.expense), borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false }
-            });
-
-            if (categoryChart) categoryChart.destroy();
-            categoryChart = new Chart(document.getElementById('categoryChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['Masuk', 'Keluar'],
-                    datasets: [{ data: [tin, tout], backgroundColor: ['#3b82f6', '#f97316'], borderWidth: 0 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%' }
-            });
-        }
-
-        // --- FUNGSI EXPORT ---
-
-        function exportExcel() {
-            const wb = XLSX.utils.book_new();
-            
-            // Sheet 1: Ringkasan
-            const ws1 = XLSX.utils.table_to_sheet(document.getElementById('exportTable'));
-            XLSX.utils.book_append_sheet(wb, ws1, "Laporan Harian");
-
-            // Sheet 2: Belanja
-            const ws2 = XLSX.utils.table_to_sheet(document.getElementById('tableExpense'));
-            XLSX.utils.book_append_sheet(wb, ws2, "Rincian Belanja");
-
-            // Sheet 3: Produk
-            const ws3 = XLSX.utils.table_to_sheet(document.getElementById('tableProduct'));
-            XLSX.utils.book_append_sheet(wb, ws3, "Menu Terjual");
-
-            XLSX.writeFile(wb, `Laporan_Owner_${document.getElementById('startDate').value}.xlsx`);
-        }
-
-        function exportPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
-            doc.text("Laporan Keuangan - Warmindo Diponegoro", 14, 15);
-            doc.setFontSize(10);
-            doc.text(`Periode: ${document.getElementById('startDate').value} s/d ${document.getElementById('endDate').value}`, 14, 22);
-            doc.autoTable({ html: '#exportTable', startY: 30, theme: 'grid', styles: { fontSize: 8 } });
-            doc.save("Laporan_Dipo.pdf");
-        }
-
-        function logout() { localStorage.clear(); window.location.href = 'index.html'; }
-
-        // Load data awal
-        fetchData();
-    </script>
+    <script src="js/owner.js"></script>
 </body>
 </html>
